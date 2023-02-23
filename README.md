@@ -9,16 +9,14 @@
 - Plugin of WooCommerce
 
 ## Install
-1. By Git
-- Sign in the server of WorPress
+### By Git
+1. Sign in the server of WorPress
+
+2. Enter WordPress directory, run command `cd /path/to/wordpress/wp-content/plugins/`
+
+3. Git clone the repository, run command `git clone https://github.com/cpayfinance/cpay-credit-card-gateway-wp.git`
 
 
-- Enter WordPress directory, run command `cd /path/to/wordpress/wp-content/plugins/`
-
-- Git clone the repository, run command `git clone `
-
-
-
-2. Download zip
-
+### Download zip
+1. Download the codes of zip, 
 
