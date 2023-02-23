@@ -7,7 +7,7 @@
 ## Prerequisites
 - WordPress (version 6.1.1+)
 - Plugin of WooCommerce
-- MerchantID and SecurityKey from cpay team
+- MerchantID and SecurityKey (from cpay team)
 
 ## Install
 
