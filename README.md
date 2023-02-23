@@ -21,22 +21,22 @@
 
 ### or By Downloading
 
-1. download zip by the endpoint (`https://github.com/cpayfinance/cpay-credit-card-gateway-wp/archive/refs/heads/main.zip`)
+1. download zip from the endpoint (`https://github.com/cpayfinance/cpay-credit-card-gateway-wp/archive/refs/heads/main.zip`)
 
-2. upload the codes to directory of WorPress on the server, unzip the zip.
+2. upload the zip to directory of WorPress on the server, unzip it.
 
 ## Config
 1. sign in admin's dashboard of WordPress
 
 2. click `plugins` of the navigation bar on the left, and select the `installed plugins` item.
 
-3. plugin of `CPay Crypto Payment Gateway` will be shown under the `unacticated` tag, activate it.
+3. plugin of `CPay Credit Card Payment Gateway` will be shown under the `unacticated` tag, activate it.
 
 4. click `WooCommerce` of the navigation bar on the left, and select the `settings` item.
 
-5. select tab of `payment`, enable it and click `CPay Crypto Payment Gateway` into the setting page.
+5. select tab of `payment`, enable it and click `CPay Credit Card Payment Gateway` into the setting page.
 
 6. set `MerchantID` and `SecurityKey` (required), `Title` and `Description` are optional, save the setting finally.
 
 ---
-After installing and setting, users will be shown payment option of `CPay Crypto Payment Gateway` on the page of `checkout order`
+After installing and setting, users will be shown payment option of `CPay Credit Card Payment Gateway` on the page of `checkout order`
