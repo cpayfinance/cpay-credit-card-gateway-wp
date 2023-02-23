@@ -15,15 +15,15 @@
 
 1. sign in the server of WorPress
 
-2. enter WordPress directory, by running command `cd /path/to/wordpress/wp-content/plugins/`.
+2. enter directory of WordPress, by running command `cd /path/to/wordpress/wp-content/plugins/`.
 
-3. get the codes, by running command `git clone https://github.com/cpayfinance/cpay-credit-card-gateway-wp.git`.
+3. fetch the codes, by running command `git clone https://github.com/cpayfinance/cpay-credit-card-gateway-wp.git`.
 
-### Download zip
+### or By Downloading
 
 1. download zip by the endpoint (`https://github.com/cpayfinance/cpay-credit-card-gateway-wp/archive/refs/heads/main.zip`)
 
-2. upload codes to the directory of WorPress on the server, unzip the code.
+2. upload the codes to directory of WorPress on the server, unzip the zip.
 
 ## Config
 1. sign in admin's dashboard of WordPress
