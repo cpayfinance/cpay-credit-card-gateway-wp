@@ -322,80 +322,6 @@ if (is_plugin_active('woocommerce/woocommerce.php') === true) {
                 echo 'ok';
                 exit;
             }
-
-            /*
-            $woocommerce->cart->empty_cart();
-            $orderid          = ( !empty(intval($_REQUEST['CustomerReferenceNr'])) ) ? intval($_REQUEST['CustomerReferenceNr']) : 0;
-            $ordstatus        = ( !empty(sanitize_text_field($_REQUEST['status'])) ) ? sanitize_text_field($_REQUEST['status']) : '';
-            $ordtransactionid = ( !empty(sanitize_text_field($_REQUEST['TransactionID'])) ) ? sanitize_text_field($_REQUEST['TransactionID']) : '';
-            $ordconfirmcode   = ( !empty(sanitize_text_field($_REQUEST['ConfirmCode'])) ) ? sanitize_text_field($_REQUEST['ConfirmCode']) : '';
-            $notenough        = ( isset($_REQUEST['notenough']) ) ? intval($_REQUEST['notenough']) : '';
-
-            $order    = new WC_Order($orderid);
-            $data     = array(
-                'mid'           => $this->merchantid,
-                'TransactionID' => $ordtransactionid,
-                'ConfirmCode'   => $ordconfirmcode,
-            );
-            $transactionData = $this->validate_order($data);
-            if (200 !== $transactionData['status_code']){
-                get_header();
-                echo '<div class="container" style="text-align: center;"><div><div><br><br><h2 style="color:#ff0000">Failure!</h2><img style="margin:auto;"  src="' . esc_url(plugins_url('images/fail.png', __FILE__)) . '"><p style="font-size:20px;color:#5C5C5C;">'.$transactionData['message'] .'</p><a href="' . esc_url(site_url()) . '" style="background-color: #ff0000;border: none;color: white; padding: 15px 32px; text-align: center;text-decoration: none;display: inline-block; font-size: 16px;" >Back</a><br><br></div></div></div>';
-                get_footer();
-                exit;
-            }
-            if($transactionData['data']['Security'] != $ordconfirmcode){
-                get_header();
-                echo '<div class="container" style="text-align: center;"><div><div><br><br><h2 style="color:#ff0000">Failure!</h2><img style="margin:auto;"  src="' . esc_url(plugins_url('images/fail.png', __FILE__)) . '"><p style="font-size:20px;color:#5C5C5C;">Data mismatch! ConfirmCode doesn\'t match</p><a href="' . esc_url(site_url()) . '" style="background-color: #ff0000;border: none;color: white; padding: 15px 32px; text-align: center;text-decoration: none;display: inline-block; font-size: 16px;" >Back</a><br><br></div></div></div>';
-                get_footer();
-                exit;
-            } elseif($transactionData['data']['CustomerReferenceNr'] != $orderid){
-                get_header();
-                echo '<div class="container" style="text-align: center;"><div><div><br><br><h2 style="color:#ff0000">Failure!</h2><img style="margin:auto;"  src="' . esc_url(plugins_url('images/fail.png', __FILE__)) . '"><p style="font-size:20px;color:#5C5C5C;">Data mismatch! CustomerReferenceNr doesn\'t match</p><a href="' . esc_url(site_url()) . '" style="background-color: #ff0000;border: none;color: white; padding: 15px 32px; text-align: center;text-decoration: none;display: inline-block; font-size: 16px;" >Back</a><br><br></div></div></div>';
-                get_footer();
-                exit;
-            } elseif($transactionData['data']['TransactionID'] != $ordtransactionid){
-                get_header();
-                echo '<div class="container" style="text-align: center;"><div><div><br><br><h2 style="color:#ff0000">Failure!</h2><img style="margin:auto;"  src="' . esc_url(plugins_url('images/fail.png', __FILE__)) . '"><p style="font-size:20px;color:#5C5C5C;">Data mismatch! TransactionID doesn\'t match</p><a href="' . esc_url(site_url()) . '" style="background-color: #ff0000;border: none;color: white; padding: 15px 32px; text-align: center;text-decoration: none;display: inline-block; font-size: 16px;" >Back</a><br><br></div></div></div>';
-                get_footer();
-                exit;
-            } elseif($transactionData['data']['Status'] != $ordstatus){
-                get_header();
-                echo '<div class="container" style="text-align: center;"><div><div><br><br><h2 style="color:#ff0000">Failure!</h2><img style="margin:auto;"  src="' . esc_url(plugins_url('images/fail.png', __FILE__)) . '"><p style="font-size:20px;color:#5C5C5C;">Data mismatch! status doesn\'t match. Your order status is '. $transactionData['data']['Status'].'</p><a href="' . esc_url(site_url()) . '" style="background-color: #ff0000;border: none;color: white; padding: 15px 32px; text-align: center;text-decoration: none;display: inline-block; font-size: 16px;" >Back</a><br><br></div></div></div>';
-                get_footer();
-                exit;
-            }
-            if (( 'paid' === $ordstatus ) && ( 0 === $notenough )) {
-                // Do your magic here, and return 200 OK to ljkjcpay.
-                if ('processing' === $order->status) {
-                    $order->update_status('processing', sprintf(__('IPN: Payment completed notification from Cpay', 'woocommerce')));
-                } else {
-                    $order->payment_complete();
-                    $order->update_status('processing', sprintf(__('IPN: Payment completed notification from Cpay', 'woocommerce')));
-                }
-
-                $order->save();
-
-                $order->add_order_note( __( 'IPN: Update status event for Cpay to status COMPLETED:', 'woocommerce' ) . ' ' . $orderid);
-
-                get_header();
-                echo '<div class="container" style="text-align: center;"><div><div><br><br><h2 style="color:#0fad00">Success!</h2><img style="margin:auto;"  src="' . esc_url(plugins_url('images/check.png', __FILE__)) . '"><p style="font-size:20px;color:#5C5C5C;">The payment has been received and confirmed successfully.</p><a href="' . esc_url(site_url()) . '" style="background-color: #0fad00;border: none;color: white; padding: 15px 32px; text-align: center;text-decoration: none;display: inline-block; font-size: 16px;" >Back</a><br><br><br><br></div></div></div>';
-                get_footer();
-                exit;
-            } elseif ('failed' === $ordstatus && 1 === $notenough) {
-                $order->update_status('on-hold', sprintf(__('IPN: Payment failed notification from Cpay because notenough', 'woocommerce')));
-                get_header();
-                echo '<div class="container" style="text-align: center;"><div><div><br><br><h2 style="color:#ff0000">Failure!</h2><img style="margin:auto;"  src="' . esc_url(plugins_url('images/fail.png', __FILE__)) . '"><p style="font-size:20px;color:#5C5C5C;">The payment has been failed.</p><a href="' . esc_url(site_url()) . '" style="background-color: #ff0000;border: none;color: white; padding: 15px 32px; text-align: center;text-decoration: none;display: inline-block; font-size: 16px;" >Back</a><br><br><br><br></div></div></div>';
-                get_footer();
-                exit;
-            } else {
-                $order->update_status('failed', sprintf(__('IPN: Payment failed notification from Cpay', 'woocommerce')));
-                get_header();
-                echo '<div class="container" style="text-align: center;"><div><div><br><br><h2 style="color:#ff0000">Failure!</h2><img style="margin:auto;"  src="' . esc_url(plugins_url('images/fail.png', __FILE__)) . '"><p style="font-size:20px;color:#5C5C5C;">The payment has been failed.</p><a href="' . esc_url(site_url()) . '" style="background-color:#ff0000;border:none;color: white;padding:15px 32px;text-align: center;text-decoration:none;display:inline-block;font-size:16px;">Back</a><br><br><br><br></div></div></div>';
-                get_footer();
-                exit;
-            }//end if
-*/
         }//end check_ljkjcpay_response()
 
 
@@ -421,7 +347,7 @@ if (is_plugin_active('woocommerce/woocommerce.php') === true) {
          */
         public function secret_missingmessage() {
             $message  = '<div class="notice notice-info is-dismissible">';
-            $message .= '<p><strong>Gateway Disabled</strong> You should check your MerchantID and SecurityKey in Cpay configuration. <a href="' . get_admin_url() . 'admin.php?page=wc-settings&amp;tab=checkout&amp;section=ljkjcpay">Click here to configure!</a></p>';
+            $message .= '<p><strong>Gateway Disabled</strong> You should check your MerchantID/SecurityKey/Host in Cpay configuration. <a href="' . get_admin_url() . 'admin.php?page=wc-settings&amp;tab=checkout&amp;section=ljkjcpay">Click here to configure!</a></p>';
             $message .= '</div>';
 
             echo $message;
