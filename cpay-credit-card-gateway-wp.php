@@ -129,11 +129,11 @@ if (is_plugin_active('woocommerce/woocommerce.php') === true) {
                 'cpayhost'  => array(
                     'title'       => __('CPay Host', 'https://example.com'),
                     'type'        => 'text',
-                    'description' => __('Please enter the host, You can get this information from cpay.finance', 'Cpay Credit Card'),
+                    'description' => __('Please enter the host, You can get this information from cpay.finance', 'Cpay'),
                     'default'     => '',
                 ),
                 'merchantid'  => array(
-                    'title'       => __('Your MerchantID', 'N/A'),
+                    'title'       => __('MerchantID', 'N/A'),
                     'type'        => 'text',
                     'description' => __('Please enter your Merchant ID, You can get this information from cpay.finance', 'Cpay Credit Card'),
                     'default'     => '',
@@ -251,7 +251,7 @@ if (is_plugin_active('woocommerce/woocommerce.php') === true) {
                 'body' => implode($ps, '&'),
             );
 
-            $url       = trim($this->merchantid, '/') . '/openapi/v1/createOrderByCreditCard';
+            $url       = trim($this->cpayhost, '/') . '/openapi/v1/createOrderByCreditCard';
             $response  = wp_safe_remote_post($url, $params);
             if (( false === is_wp_error($response) ) && ( 200 === $response['response']['code'] ) && ( 'OK' === $response['response']['message'] )) {
                 $body = json_decode($response['body'], true);
