@@ -99,6 +99,10 @@ if (is_plugin_active('woocommerce/woocommerce.php') === true) {
                 add_action('admin_notices', array( &$this, 'secret_missingmessage' ));
             }
 
+            // Checking if cpayhost is not empty.
+            if (empty($this->cpayhost) === true) {
+                add_action('admin_notices', array( &$this, 'secret_missingmessage' ));
+            }
         }
 
         /**
@@ -109,43 +113,42 @@ if (is_plugin_active('woocommerce/woocommerce.php') === true) {
         public function init_form_fields() {
             $this->form_fields = array(
                 'enabled'     => array(
-                    'title'   => __('Enable/Disable', 'Cpay Credit Card'),
+                    'title'   => __('Enable/Disable', ''),
                     'type'    => 'checkbox',
-                    'label'   => __('Enable Ljkjcpay', 'Cpay Credit Card'),
+                    'label'   => __('Enable CPay Credit Card', ''),
                     'default' => 'yes',
                 ),
                 'title'       => array(
-                    'title'       => __('Title', 'Cpay Credit Card'),
+                    'title'       => __('Title', ''),
                     'type'        => 'text',
-                    'description' => __('This controls the title the user can see during checkout.', 'Cpay Credit Card'),
-                    'default'     => __('Cpay Credit Card', 'Cpay Credit Card'),
+                    'description' => __('This controls the title the user can see during checkout.', ''),
+                    'default'     => __('CPay Credit Card', ''),
                 ),
                 'description' => array(
-                    'title'       => __('Description', 'Cpay Credit Card'),
+                    'title'       => __('Description', ''),
                     'type'        => 'textarea',
-                    'description' => __('This controls the title the user can see during checkout.', 'Cpay Credit Card'),
-                    'default'     => __('You will be redirected to cpay.finance to complete your purchase.', 'Cpay Credit Card'),
+                    'description' => __('This controls the title the user can see during checkout.', ''),
+                    'default'     => __('You will be redirected to cpay.finance to complete your purchasing.', ''),
                 ),
                 'cpayhost'  => array(
-                    'title'       => __('CPay Host', 'https://example.com'),
+                    'title'       => __('CPay Host', ''),
                     'type'        => 'text',
-                    'description' => __('Please enter the host, You can get this information from cpay.finance', 'Cpay'),
-                    'default'     => '',
+                    'description' => __('Please enter the host, You can get this information from cpay.finance', ''),
+                    'default'     => 'https://example.com',
                 ),
                 'merchantid'  => array(
-                    'title'       => __('MerchantID', 'N/A'),
+                    'title'       => __('MerchantID', ''),
                     'type'        => 'text',
-                    'description' => __('Please enter your Merchant ID, You can get this information from cpay.finance', 'Cpay Credit Card'),
-                    'default'     => '',
+                    'description' => __('Please enter your MerchantID, You can get this information from cpay.finance', ''),
+                    'default'     => '0',
                 ),
                 'secret'      => array(
-                    'title'       => __('SecurityKey', 'Ljkjcpay'),
+                    'title'       => __('SecurityKey', ''),
                     'type'        => 'password',
-                    'description' => __('Please enter your cpay SecurityKey, You can get this information from cpay.finance', 'Cpay Credit Card'),
-                    'default'     => '',
+                    'description' => __('Please enter your SecurityKey, You can get this information from cpay.finance', ''),
+                    'default'     => '*',
                 ),
             );
-
         }//end init_form_fields()
 
 
@@ -156,20 +159,18 @@ if (is_plugin_active('woocommerce/woocommerce.php') === true) {
          */
         public function admin_options() {
             ?>
-            <h3><?php esc_html_e('Cpay Checkout', 'Cpay'); ?></h3>
+            <h3><?php esc_html_e('CPay Checkout', 'CPay'); ?></h3>
 
             <div id="wc_get_started">
-                <span class="main"><?php esc_html_e('Provides a secure way to accept crypto currencies.', 'Cpay'); ?></span>
-                <p><a href="https://cpay.finance" target="_blank" class="button button-primary"><?php esc_html_e('Join free', 'Cpay'); ?></a> <a href="https://cpay.finance" target="_blank" class="button"><?php esc_html_e('Learn more about WooCommerce and Cpay', 'Cpay'); ?></a></p>
+                <span class="main"><?php esc_html_e('Provides a secure way to accept crypto currencies.', 'CPay'); ?></span>
+                <p><a href="https://cpay.finance" target="_blank" class="button button-primary"><?php esc_html_e('Join free', 'CPay'); ?></a> <a href="https://cpay.finance" target="_blank" class="button"><?php esc_html_e('Learn more about WooCommerce and CPay', 'CPay'); ?></a></p>
             </div>
 
             <table class="form-table">
                 <?php $this->generate_settings_html(); ?>
             </table>
             <?php
-
         }//end admin_options()
-
 
         /**
          *  There are no payment fields for Cpay, but we want to show the description if set.
@@ -182,7 +183,6 @@ if (is_plugin_active('woocommerce/woocommerce.php') === true) {
             }
         }//end payment_fields()
 
-
         /**
          * Process the payment and return the result
          *
@@ -194,9 +194,20 @@ if (is_plugin_active('woocommerce/woocommerce.php') === true) {
         {
             global $woocommerce;
             $order = wc_get_order($orderid);
-
-            if ($order->get_total() < 0.1) {
-                wc_add_notice(__('Payment error:', 'cpay'), 'error', 'order total amount less than 0.10' );
+            if ($order->get_total() < 1) {
+                wc_add_notice('Checkout error: order amount cannot less than 1.00', 'error');
+                exit();
+            }
+            if (empty($this->merchantid) === true) {
+                wc_add_notice('Checkout error: please contact administrator [C1000]', 'error');
+                exit();
+            }
+            if (empty($this->secret) === true) {
+                wc_add_notice('Checkout error: please contact administrator [C1001]', 'error');
+                exit();
+            }
+            if (empty($this->cpayhost) === true) {
+                wc_add_notice('Checkout error: please contact administrator [C1002]', 'error');
                 exit();
             }
 
@@ -255,7 +266,9 @@ if (is_plugin_active('woocommerce/woocommerce.php') === true) {
             $response  = wp_safe_remote_post($url, $params);
             if (( false === is_wp_error($response) ) && ( 200 === $response['response']['code'] ) && ( 'OK' === $response['response']['message'] )) {
                 $body = json_decode($response['body'], true);
-                if (isset($body['code']) && $body['code'] == 0) {
+                $code = isset($body['code']) ? $body['code'] : -1;
+                $errmsg = isset($body['msg']) ? $body['msg'] : 'create order failed';
+                if ($code == 0) {
                     // 更新订单状态为等待中 (等待第三方支付网关返回)
                     $order->update_status('pending', __( 'Awaiting payment', 'woocommerce' ));
                     $order->reduce_order_stock(); // 减少库存
@@ -266,9 +279,10 @@ if (is_plugin_active('woocommerce/woocommerce.php') === true) {
                     );
                     return $rr;
                 }
+                wc_add_notice('Payment error: '.sprintf("%s [C%d]", $errmsg, $code), 'error');
+                exit();
             }
-            wc_add_notice(__('Payment error:', 'cpay'), 'error', 'call cpay payment gateway fail' );
-
+            wc_add_notice('Payment error: system upgrade, please try it later.', 'error');
         }//end process_payment()
 
         /**
@@ -353,6 +367,5 @@ if (is_plugin_active('woocommerce/woocommerce.php') === true) {
             echo $message;
 
         }//end secret_missingmessage()
-
     }//end class
 }//end if
