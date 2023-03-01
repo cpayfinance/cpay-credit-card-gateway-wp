@@ -71,6 +71,7 @@ if (is_plugin_active('woocommerce/woocommerce.php') === true) {
             $this->title       = $this->get_option('title');
             $this->description = $this->get_option('description');
             $this->merchantid  = $this->get_option('merchantid');
+            $this->cpayhost    = $this->get_option('cpayhost');
 
             $this->apikey         = '1';
             $this->secret         = $this->get_option('secret');
@@ -124,6 +125,12 @@ if (is_plugin_active('woocommerce/woocommerce.php') === true) {
                     'type'        => 'textarea',
                     'description' => __('This controls the title the user can see during checkout.', 'Cpay Credit Card'),
                     'default'     => __('You will be redirected to cpay.finance to complete your purchase.', 'Cpay Credit Card'),
+                ),
+                'cpayhost'  => array(
+                    'title'       => __('CPay Host', 'https://example.com'),
+                    'type'        => 'text',
+                    'description' => __('Please enter the host, You can get this information from cpay.finance', 'Cpay Credit Card'),
+                    'default'     => '',
                 ),
                 'merchantid'  => array(
                     'title'       => __('Your MerchantID', 'N/A'),
@@ -244,7 +251,7 @@ if (is_plugin_active('woocommerce/woocommerce.php') === true) {
                 'body' => implode($ps, '&'),
             );
 
-            $url       = 'https://api.cpay.ltd/openapi/v1/createOrderByCreditCard';
+            $url       = trim($this->merchantid, '/') . '/openapi/v1/createOrderByCreditCard';
             $response  = wp_safe_remote_post($url, $params);
             if (( false === is_wp_error($response) ) && ( 200 === $response['response']['code'] ) && ( 'OK' === $response['response']['message'] )) {
                 $body = json_decode($response['body'], true);
