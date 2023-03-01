@@ -6,11 +6,12 @@
 
 ## Prerequisites
 - WordPress (version 6.1.1+)
-- Plugin of WooCommerce
-- MerchantID and SecurityKey (from cpay team)
+- WooCommerce Plugin
+- Host, MerchantID and SecurityKey (from CPay)
 
 ## Install
 
+Refer to [`CPay Crypto Payment Gateway` # Install ](https://github.com/cpayfinance/cpay-crypto-gateway-wp/blob/main/README.md#install)
 ### By Git
 
 1. sign in the server of WorPress
