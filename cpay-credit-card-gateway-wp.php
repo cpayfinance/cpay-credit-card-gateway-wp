@@ -36,7 +36,6 @@ if (is_plugin_active('woocommerce/woocommerce.php') === true) {
     function wc_ljkjcpay_gateway( $methods) {
         $methods[] = 'ljkjcpay';
         return $methods;
-
     }
 
     /**
@@ -78,15 +77,12 @@ if (is_plugin_active('woocommerce/woocommerce.php') === true) {
             $this->msg['message'] = '';
             $this->msg['class']   = '';
 
-            add_action('init', array(&$this, 'check_cpaycreditcard_response'));
-            add_action('woocommerce_update_options_payment_gateways_' . $this->id, array(&$this, 'process_admin_options'));
-            add_action('woocommerce_api_' . strtolower(get_class($this)).'_creditcard_callback', array( &$this, 'check_cpaycreditcard_response' ));
+            add_action('woocommerce_api_' . strtolower(get_class($this)).'_cc_callback', array(&$this, 'cpaycc_callback_processor'));
 
             // Valid for use.
+            $this->enabled = 'no';
             if (empty($this->settings['enabled']) === false && empty($this->apikey) === false && empty($this->secret) === false) {
                 $this->enabled = 'yes';
-            } else {
-                $this->enabled = 'no';
             }
 
             // Checking if apikey is not empty.
@@ -131,7 +127,7 @@ if (is_plugin_active('woocommerce/woocommerce.php') === true) {
                     'default'     => __('You will be redirected to cpay.finance to complete your purchasing.', ''),
                 ),
                 'cpayhost'  => array(
-                    'title'       => __('CPay Host', ''),
+                    'title'       => __('API Host', ''),
                     'type'        => 'text',
                     'description' => __('Please enter the host, You can get this information from cpay.finance', ''),
                     'default'     => 'https://example.com',
@@ -139,7 +135,7 @@ if (is_plugin_active('woocommerce/woocommerce.php') === true) {
                 'merchantid'  => array(
                     'title'       => __('MerchantID', ''),
                     'type'        => 'text',
-                    'description' => __('Please enter your MerchantID, You can get this information from cpay.finance', ''),
+                    'description' => __('Please enter your MerchantID, You can get this information from cpay.finance or ', ''),
                     'default'     => '0',
                 ),
                 'secret'      => array(
@@ -159,11 +155,10 @@ if (is_plugin_active('woocommerce/woocommerce.php') === true) {
          */
         public function admin_options() {
             ?>
-            <h3><?php esc_html_e('CPay Checkout', 'CPay'); ?></h3>
+            <h3><?php esc_html_e('CPay Credit Card Checkout', 'CPay'); ?></h3>
 
             <div id="wc_get_started">
-                <span class="main"><?php esc_html_e('Provides a secure way to accept crypto currencies.', 'CPay'); ?></span>
-                <p><a href="https://cpay.finance" target="_blank" class="button button-primary"><?php esc_html_e('Join free', 'CPay'); ?></a> <a href="https://cpay.finance" target="_blank" class="button"><?php esc_html_e('Learn more about WooCommerce and CPay', 'CPay'); ?></a></p>
+                <p><a href="https://cpay.finance" target="_blank" class="button"><?php esc_html_e("Learn more about CPay", "CPay"); ?></a></p>
             </div>
 
             <table class="form-table">
@@ -211,6 +206,7 @@ if (is_plugin_active('woocommerce/woocommerce.php') === true) {
                 exit();
             }
 
+            $order_data = $order->get_data();
             $itemnames = array();
             if (count($order->get_items()) > 0) {
                 foreach ($order->get_items() as $item) {
@@ -225,45 +221,29 @@ if (is_plugin_active('woocommerce/woocommerce.php') === true) {
             }
 
             list($usec, $sec) = explode(" ", microtime());
-            $order_data = $order->get_data();
-            $ss = 'amount=' . number_format($order->get_total(), 2, '.', '').
-                '&callBackURL=' . site_url('/?wc-api=ljkjcpay_creditcard_callback').
-                '&country=' . (isset($order_data['billing']['country']) ? $order_data['billing']['country'] : '').
-                '&createTime=' . round($sec*1000).
-                '&currency='.get_woocommerce_currency().
-                '&email='.(isset($order_data['billing']['email']) ? $order_data['billing']['email'] : '').
-                '&ip='.(isset($order_data['customer_ip_address']) ? $order_data['customer_ip_address'] : '').
-                '&merchantId=' . $this->merchantid .
-                '&merchantTradeNo=' . $this->merchantid . '_' . $orderid .
-                '&products=' . json_encode($itemnames).
-                '&userId=' . $sec.
-                '&key=' . $this->secret;
+            $params = [
+                'merchantId' => $this->merchantid,
+                'merchantTradeNo' => $this->merchantid . '_' . $orderid,
+                'createTime' => round($sec*1000),
+                'userId' => $sec,
+                'ip' => (isset($order_data['customer_ip_address']) ? $order_data['customer_ip_address'] : ''),
+                'email' => (isset($order_data['billing']['email']) ? $order_data['billing']['email'] : ''),
+                'country' => (isset($order_data['billing']['country']) ? $order_data['billing']['country'] : ''),
+                'products' => json_encode($itemnames),
+                'currency' => get_woocommerce_currency(),
+                'amount' => number_format($order->get_total(), 2, '.', ''),
+                'callBackURL' => site_url('/?wc-api=ljkjcpay_cc_callback'),
+                'successURL' => '',
+                'failURL' => '',
+            ];
+            $params['sign'] = $this->gen_signature($params, $this->secret);
 
-            $ps = array(
-                'merchantId=' . $this->merchantid,
-                'merchantTradeNo=' . $this->merchantid . '_' . $orderid,
-                'createTime=' . round($sec*1000),
-                'userId=' . $sec,
-                'ip=' . (isset($order_data['customer_ip_address']) ? $order_data['customer_ip_address'] : ''),
-                'email='.(isset($order_data['billing']['email']) ? $order_data['billing']['email'] : ''),
-                'country=' . (isset($order_data['billing']['country']) ? $order_data['billing']['country'] : ''),
-                'products=' . json_encode($itemnames),
-                'currency='.get_woocommerce_currency(),
-                'amount=' . number_format($order->get_total(), 2, '.', ''),
-                'callBackURL=' . site_url('/?wc-api=ljkjcpay_creditcard_callback'),
-                'returnURL=' . '', // 可为空 没用
-                'successURL=' . '',
-                'failURL=' . '',
-                'sign=' . hash_hmac("sha256", $ss, $this->secret),
-                'extInfo=' . '', // 可为空
-            );
-
-            $params    = array(
-                'body' => implode($ps, '&'),
-            );
-
+            $req = '';
+            foreach ($params as $k => $v) {
+                $req = $req . "{$k}={$v}&";
+            }
             $url       = trim($this->cpayhost, '/') . '/openapi/v1/createOrderByCreditCard';
-            $response  = wp_safe_remote_post($url, $params);
+            $response  = wp_safe_remote_post($url, array('body' => trim($req, '&')));
             if (( false === is_wp_error($response) ) && ( 200 === $response['response']['code'] ) && ( 'OK' === $response['response']['message'] )) {
                 $body = json_decode($response['body'], true);
                 $code = isset($body['code']) ? $body['code'] : -1;
@@ -288,10 +268,9 @@ if (is_plugin_active('woocommerce/woocommerce.php') === true) {
         /**
          * Check for valid Cpay server callback
          *
-         *
          * @return string
          **/
-        public function check_cpaycreditcard_response() {
+        public function cpaycc_callback_processor() {
             global $woocommerce;
             $body = file_get_contents('php://input');
             $body_data = json_decode($body, true);
@@ -338,7 +317,6 @@ if (is_plugin_active('woocommerce/woocommerce.php') === true) {
             }
         }//end check_ljkjcpay_response()
 
-
         /**
          * Adds error message when not configured the api key.
          *
@@ -350,9 +328,7 @@ if (is_plugin_active('woocommerce/woocommerce.php') === true) {
             $message .= '</div>';
 
             echo $message;
-
         }//end apikey_missingmessage()
-
 
         /**
          * Adds error message when not configured the secret.
@@ -365,7 +341,22 @@ if (is_plugin_active('woocommerce/woocommerce.php') === true) {
             $message .= '</div>';
 
             echo $message;
-
         }//end secret_missingmessage()
+
+        public function gen_signature($params, $security_key) {
+            if (!is_array($params) || count($params) == 0) {
+                return '';
+            }
+
+            ksort($params);
+            $ps = '';
+            foreach ($params as $k => $v) {
+                if (!empty($v)) {
+                    $ps = $ps . "{$k}={$v}&";
+                }
+            }
+            $ps = $ps.'key='.$security_key;
+            return hash_hmac("sha256", $ps, $security_key);
+        }
     }//end class
 }//end if
